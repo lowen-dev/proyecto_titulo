@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import brentq
+from scipy.optimize import minimize_scalar
 
 
 def g(x, c, sigma):
@@ -30,33 +30,35 @@ def dlnL_dA(A, mu, D, x, c, sigma):
 
 def estimar_mle_individual(D, x, c, sigma, mu_0, A_0):
     """Realiza la estimación MLE para una sola muestra de datos D."""
-    max_bound = max(10 * D.max() + 10, 100.0)
     
-    # MLE de mu (fijando A = A_0)
-    mu_verosimilitud = brentq(
-        lambda mu: dlnL_dmu(mu, A_0, D, x, c, sigma), 
-        1e-6, 
-        max_bound
+    # 1. MLE de mu (fijando A = A_0)
+    res_mu = minimize_scalar(
+        lambda mu: -lnL(mu, A_0, D, x, c, sigma),
+        bounds=(1e-5, D.max() * 2.0),
+        method='bounded'
     )
-    
-    # MLE de A (fijando mu = mu_0)
-    A_verosimilitud = brentq(
-        lambda A: dlnL_dA(A, mu_0, D, x, c, sigma), 
-        0.0, 
-        max_bound
+    mu_verosimilitud = res_mu.x
+
+    # 2. MLE de A (fijando mu = mu_0)
+    res_A = minimize_scalar(
+        lambda A: -lnL(mu_0, A, D, x, c, sigma),
+        bounds=(1e-5, D.max() * 5.0),
+        method='bounded'
     )
-    
+    A_verosimilitud = res_A.x
+
     return mu_verosimilitud, A_verosimilitud
 
 def mle(n_muestras, x, c, sigma, mu_rng, A_rng):
     mu_resultados = []
     A_resultados = []
-    D_total = []
+    D_total = np.random.poisson(
+        lam=F(mu_rng, A_rng, x, c, sigma),
+        size=(n_muestras, len(x))
+    )
     
     for _ in range(n_muestras):
-        # Generar datos de Poisson basados en los parámetros reales
-        D = np.random.poisson(F(mu_rng, A_rng, x, c, sigma))
-        D_total.append(D)
+        D = D_total[_]
         
         # Estimar MLE usando los valores reales como referencia (mu_0, A_0)
         mu_mle, A_mle = estimar_mle_individual(D, x, c, sigma, mu_rng, A_rng)

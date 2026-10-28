@@ -7,8 +7,8 @@ def main():
     # --- Parámetros ---
     c, sigma = 0.0, 1.62                 # c y sigma de ireland
     mu_rng, A_rng = 114.0, 1434.0        # Valores reales
-    N_muestras = 100                    # Repetir 1000 veces
-    x = np.arange(1, 18, 1)              # x de 1 a 17
+    N_muestras = 100                  # Repetir 1000 veces
+    x = np.linspace(-8.5, 8.5, 18)       # x de -8 a 9
     
     # Obtener los 1000 resultados
     mu_array, A_array, D_array = mle(N_muestras, x, c, sigma, mu_rng, A_rng)

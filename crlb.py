@@ -42,12 +42,15 @@ def evaluar_crlb(mu_array, A_array, mu_real, A_real, x, c, sigma):
     var_crlb_mu = crlb_mu(mu_real, A_real, x, c, sigma)
     var_crlb_A = crlb_A(mu_real, A_real, x, c, sigma)
 
-    # 3. Criterio de cumplimiento con la cota
-    # (Teóricamente la varianza no debe ser menor que la cota; se incluye una tolerancia 
-    # razonable del 80% para absorber la fluctuación estadística propia de N=100 muestras).
-    # PREGUNTAR PROFESOR
-    cumple_mu = "SÍ" if var_mu_mle >= var_crlb_mu else "NO"
-    cumple_A  = "SÍ" if var_A_mle  >= var_crlb_A else "NO"
+    # 3. CRLB
+    N = len(mu_array)
+    tol = 3 * np.sqrt(2.0 / (N - 1))      # ~3 sigmas de la fluctuación de la varianza muestral
+
+    ratio_mu = var_mu_mle / var_crlb_mu
+    ratio_A  = var_A_mle  / var_crlb_A
+
+    cumple_mu = "SÍ" if ratio_mu >= 1 - tol else "NO"
+    cumple_A  = "SÍ" if ratio_A  >= 1 - tol else "NO"
 
     resultados = {
         "var_mu_mle": var_mu_mle,
