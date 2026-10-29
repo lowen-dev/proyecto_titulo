@@ -64,3 +64,67 @@ def graficar_resultados(x, D_ejemplo, mu_verosimilitud, A_verosimilitud, mu_rng,
 
     plt.tight_layout()
     plt.show()
+
+# ==========================================================
+# COMPARACIÓN MLE vs MCO (3 paneles)
+# ==========================================================
+
+def _gauss_pdf(z, media, std):
+    return np.exp(-(z - media)**2 / (2 * std**2)) / (std * np.sqrt(2 * np.pi))
+
+
+def graficar_comparacion_mco(x, D_ejemplo, mu_mle, A_mle, mu_mco, A_mco,
+                             mu_rng, A_rng, c, sigma,
+                             std_crlb_mu, std_crlb_A,
+                             std_teo_mco_mu=None, std_teo_mco_A=None):
+    """
+    Figura de 3 paneles para comparar MLE vs MCO frente a la CRLB:
+      1) Datos promedio y ajustes (real, MLE, MCO).
+      2) Distribución de las estimaciones de mu (MLE vs MCO) y campana de la CRLB.
+      3) Distribución de las estimaciones de A  (MLE vs MCO) y campana de la CRLB.
+    mu_mle, A_mle, mu_mco, A_mco son los arrays de todas las simulaciones.
+    """
+    std_mu_mle, std_A_mle = np.std(mu_mle, ddof=1), np.std(A_mle, ddof=1)
+    std_mu_mco, std_A_mco = np.std(mu_mco, ddof=1), np.std(A_mco, ddof=1)
+
+    fig, ax = plt.subplots(1, 3, figsize=(17, 5))
+
+    # 1) Datos y ajustes
+    xx = np.linspace(x.min(), x.max(), 400)
+    ax[0].plot(x, D_ejemplo, "ko", label="Datos D (promedio)")
+    ax[0].plot(xx, F(mu_rng, A_rng, xx, c, sigma), "g-", label="Real")
+    ax[0].plot(xx, F(mu_mle.mean(), A_mle.mean(), xx, c, sigma), "r--", label="MLE Fit")
+    ax[0].plot(xx, F(mu_mco.mean(), A_mco.mean(), xx, c, sigma), "b:", lw=2, label="MCO Fit")
+    ax[0].set_xlabel("x")
+    ax[0].set_ylabel("D")
+    ax[0].legend()
+    ax[0].set_title("Datos y ajustes: MLE vs MCO")
+
+    # 2) y 3) Distribuciones de los estimadores
+    paneles = [
+        (ax[1], "mu", mu_mle, mu_mco, mu_rng, std_crlb_mu, std_mu_mle, std_mu_mco, std_teo_mco_mu),
+        (ax[2], "A",  A_mle,  A_mco,  A_rng,  std_crlb_A,  std_A_mle,  std_A_mco,  std_teo_mco_A),
+    ]
+    for a, nombre, est_mle, est_mco, real, s_crlb, s_mle, s_mco, s_teo in paneles:
+        lim = 4.5 * max(s_mle, s_mco)
+        bins = np.linspace(real - lim, real + lim, 60)
+        a.hist(est_mle, bins=bins, density=True, color="red", alpha=0.35,
+               label=f"MLE (σ={s_mle:.2f})")
+        a.hist(est_mco, bins=bins, density=True, color="blue", alpha=0.35,
+               label=f"MCO (σ={s_mco:.2f})")
+
+        zz = np.linspace(real - lim, real + lim, 400)
+        a.plot(zz, _gauss_pdf(zz, real, s_crlb), color="orange", lw=2,
+               label=f"CRLB 1D (σ={s_crlb:.2f})")
+        if s_teo is not None:
+            a.plot(zz, _gauss_pdf(zz, real, s_teo), color="navy", ls="--", lw=1.2,
+                   label=f"MCO teórico (σ={s_teo:.2f})")
+
+        a.axvline(real, color="g", ls=":", label=f"{nombre}_real = {real}")
+        a.set_xlabel(nombre)
+        a.set_ylabel("Densidad")
+        a.legend(fontsize=8)
+        a.set_title(f"Distribución de {nombre}: σ_MLE/σ_MCO = {s_mle/s_mco:.3f}")
+
+    plt.tight_layout()
+    plt.show()
