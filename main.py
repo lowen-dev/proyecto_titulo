@@ -1,15 +1,14 @@
 import numpy as np
 from mle import mle
 from mco import mco
-from plotting_utils import graficar_resultados, graficar_comparacion_mco
+from plotting_utils import graficar_resultados, graficar_comparacion_mco, mostrar_graficos
 from crlb import (evaluar_crlb, evaluar_mco, imprimir_reporte_1d,
                   imprimir_reporte_comparativo)
-
 
 # --- Parámetros ---
 c, sigma = 0.0, 1.62                 # c y sigma de ireland
 mu_rng, A_rng = 114.0, 1434.0        # Valores reales
-N_muestras = 10000                  # Repetir 1000 veces
+N_muestras = 100000                  # Repetir 1000 veces
 x = np.linspace(-8.5, 8.5, 18)       # x de -8 a 9
 
 # Obtener los 1000 resultados
@@ -19,7 +18,7 @@ reporte = evaluar_crlb(mu_mle, A_mle, mu_rng, A_rng, x, c, sigma)
 imprimir_reporte_1d(reporte)
 
 # --- MCO sobre los MISMOS datos D que el MLE ---
-mu_mco, A_mco, _ = mco(N_muestras, x, c, sigma, mu_rng, A_rng, D_total=D_array)
+mu_mco, A_mco, _ = mco(x, c, sigma, mu_rng, A_rng, D_total=D_array)
 reporte_mco = evaluar_mco(mu_mco, A_mco, mu_rng, A_rng, x, c, sigma)
 imprimir_reporte_comparativo(reporte, reporte_mco)
 
@@ -51,4 +50,6 @@ graficar_comparacion_mco(
     std_teo_mco_mu=np.sqrt(reporte_mco['var_teo_mu']),
     std_teo_mco_A=np.sqrt(reporte_mco['var_teo_A'])
 )
+
+mostrar_graficos()   # único plt.show(): abre ambas figuras a la vez
 

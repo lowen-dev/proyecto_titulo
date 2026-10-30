@@ -63,7 +63,7 @@ def graficar_resultados(x, D_ejemplo, mu_verosimilitud, A_verosimilitud, mu_rng,
     ax[2].set_title(f"ln L(A | mu = {mu_rng})")
 
     plt.tight_layout()
-    plt.show()
+    return fig
 
 # ==========================================================
 # COMPARACIÓN MLE vs MCO (3 paneles)
@@ -127,4 +127,9 @@ def graficar_comparacion_mco(x, D_ejemplo, mu_mle, A_mle, mu_mco, A_mco,
         a.set_title(f"Distribución de {nombre}: σ_MLE/σ_MCO = {s_mle/s_mco:.3f}")
 
     plt.tight_layout()
+    return fig
+
+
+def mostrar_graficos():
+    """Abre todas las figuras creadas a la vez, con un único plt.show()."""
     plt.show()

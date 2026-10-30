@@ -19,7 +19,8 @@ def estimar_mco_individual(D, x, c, sigma, mu_0, A_0):
     g_vals = g(x, c, sigma)
 
     # MCO de mu
-    mu_mco = np.mean(D - A_0 * g_vals)
+    N = len(x)   # píxeles por espectro (NO n_muestras)
+    mu_mco = np.sum(D - A_0 * g_vals, axis=1) / N
 
     # MCO de 
     A_mco = np.sum(g_vals * (D - mu_0)) / np.sum(g_vals**2)
@@ -27,17 +28,12 @@ def estimar_mco_individual(D, x, c, sigma, mu_0, A_0):
     return mu_mco, A_mco
 
 
-def mco(n_muestras, x, c, sigma, mu_rng, A_rng, D_total=None):
+def mco(x, c, sigma, mu_rng, A_rng, D_total=None):
     """
     Aplica MCO a n_muestras espectros.
     Si se pasa D_total (el mismo que usó el MLE), se reutiliza para
     comparar ambos estimadores sobre exactamente los mismos datos.
     """
-    if D_total is None:
-        D_total = np.random.poisson(
-            lam=F(mu_rng, A_rng, x, c, sigma),
-            size=(n_muestras, len(x))
-        )
 
     g_vals = g(x, c, sigma)
 
